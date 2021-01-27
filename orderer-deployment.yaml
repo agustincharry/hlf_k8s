@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orderer0
+  labels:
+    app: orderer0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orderer0
+  template:
+    metadata:
+      labels:
+        app: orderer0
+    spec:
+      initContainers:
+      - name: alpine
+        image: alpine:3
+        command: ['sh', '-c', 'apk add git && cd /data && git clone https://github.com/agustincharry/hlf_certs.git']
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      containers:
+      - name: orderer
+        image: hyperledger/fabric-orderer:2.3.0
+        workingDir: /opt/gopath/src/github.com/hyperledger/fabric
+        ports:
+        - name: app
+          containerPort: 7050
+        - name: operations
+          containerPort: 8443
+        env:
+        - name: TZ
+          value: "America/Bogota"
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      
+      volumes:
+      - name: data
+        emptyDir: {}
