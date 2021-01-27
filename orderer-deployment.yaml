@@ -17,13 +17,14 @@ spec:
       initContainers:
       - name: alpine
         image: alpine:3
-        command: ['sh', '-c', 'apk add git && cd /data && git clone https://github.com/agustincharry/hlf_certs.git']
+        command: ['sh', '-c', 'apk add git && cd /data && git clone https://github.com/agustincharry/hlf_k8s.git']
         volumeMounts:
         - name: data
           mountPath: /data
       containers:
       - name: orderer
         image: hyperledger/fabric-orderer:2.3.0
+        #image: nginx:alpine
         workingDir: /opt/gopath/src/github.com/hyperledger/fabric
         ports:
         - name: app
@@ -35,7 +36,8 @@ spec:
           value: "America/Bogota"
         volumeMounts:
         - name: data
-          mountPath: /data
+          mountPath: /opt/gopath/src/github.com/hyperledger/fabric
+          subPath: config/org/orderers/orderer0
       
       volumes:
       - name: data
