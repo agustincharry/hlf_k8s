@@ -14,18 +14,43 @@ spec:
       labels:
         app: orderer0
     spec:
+
+      volumes:
+      - name: msp
+        emptyDir: {}
+      - name: tls
+        emptyDir: {}
+      - name: genesis-block
+        emptyDir: {}
+      - name: orderer-yaml
+        emptyDir: {}
+
       initContainers:
       - name: alpine
         image: alpine:3
-        command: ['sh', '-c', 'apk add git && cd /data && git clone https://github.com/agustincharry/hlf_k8s.git']
+        command: ['sh', '-c']
+        args:
+        - mkdir /data && cd /data && apk add git &&
+          git clone https://github.com/agustincharry/hlf_k8s.git &&
+          cp -r /data/hlf_k8s/config/org/orderers/orderer0/msp/. /msp &&
+          cp -r /data/hlf_k8s/config/org/orderers/orderer0/tls/. /tls &&
+          cp /data/hlf_k8s/config/genesis.block /genesis-block/genesis.block &&
+          cp /data/hlf_k8s/config/orderer.yaml /orderer-yaml/orderer.yaml
         volumeMounts:
-        - name: data
-          mountPath: /data
+        - name: msp
+          mountPath: /msp
+        - name: tls
+          mountPath: /tls
+        - name: genesis-block
+          mountPath: /genesis-block
+        - name: orderer-yaml
+          mountPath: /orderer-yaml
+
       containers:
       - name: orderer
         image: hyperledger/fabric-orderer:2.3.0
-        #image: nginx:alpine
         workingDir: /opt/gopath/src/github.com/hyperledger/fabric
+        #image: nginx:alpine
         ports:
         - name: app
           containerPort: 7050
@@ -34,11 +59,15 @@ spec:
         env:
         - name: TZ
           value: "America/Bogota"
+
         volumeMounts:
-        - name: data
-          mountPath: /opt/gopath/src/github.com/hyperledger/fabric
-          subPath: config/org/orderers/orderer0
-      
-      volumes:
-      - name: data
-        emptyDir: {}
+        - name: msp
+          mountPath: /opt/gopath/src/github.com/hyperledger/fabric/msp
+        - name: tls
+          mountPath: /opt/gopath/src/github.com/hyperledger/fabric/tls
+        - name: genesis-block
+          mountPath: /etc/hyperledger/fabric/genesis.block
+          subPath: genesis.block
+        - name: orderer-yaml
+          mountPath: /etc/hyperledger/fabric/orderer.yaml
+          subPath: orderer.yaml
